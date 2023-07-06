@@ -2,14 +2,16 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func resetBoard(brd [][]string) {
 	for i := 0; i < len(brd); i++ {
 		for j := 0; j < len(brd[i]); j++ {
-			brd[i][j] = ""
+			brd[i][j] = " "
 		}
 	}
 }
@@ -21,25 +23,42 @@ func showBoard(brd [][]string) {
 	fmt.Println()
 
 	// First write the column header
-	fmt.Print("    ")
+	fmt.Print("       ")
 	for i := 0; i < numCol; i++ {
-		fmt.Print(strconv.Itoa(i) + "   ")
+		// fmt.Print(strconv.Itoa(i) + "   ")
+		fmt.Print(strconv.Itoa(i) + "      ")
 	}
-	fmt.Printf("\n")
+	fmt.Printf("\n    ")
+
+	for i := 0; i < numCol; i++ {
+		fmt.Printf(strings.Repeat("-", 6))
+
+		if i != numCol-1 {
+			fmt.Printf("+")
+		}
+	}
 
 	fmt.Println() // blank line after the header
 
 	// The write the table
 	for i := 0; i < numRow; i++ {
-		fmt.Print(strconv.Itoa(i) + "  ")
+		fmt.Print(strconv.Itoa(i))
+		fmt.Printf(strings.Repeat(" ", 2))
 		for j := 0; j < numCol; j++ {
-			if j != 0 {
-				fmt.Print("|")
+			fmt.Print("|")
+			if brd[i][j] == " " {
+				fmt.Printf(strings.Repeat(" ", 6))
+			} else {
+				fmt.Printf(strings.Repeat(" ", 3))
+				fmt.Print(brd[i][j])
+				fmt.Printf(strings.Repeat(" ", 2))
 			}
-			fmt.Print(" " + brd[i][j] + " ")
 		}
 
-		fmt.Println()
+		fmt.Print("|")
+		fmt.Printf(strings.Repeat(" ", 6))
+
+		fmt.Printf("\n    ")
 
 		if i != (numRow - 1) {
 			// separator line
@@ -47,11 +66,21 @@ func showBoard(brd [][]string) {
 				if j != 0 {
 					fmt.Print("+")
 				}
-				fmt.Print("---")
+
+				fmt.Printf(strings.Repeat("-", 6))
 			}
 			fmt.Println()
 		}
 	}
+
+	for i := 0; i < numCol; i++ {
+		fmt.Printf(strings.Repeat("-", 6))
+
+		if i != numCol-1 {
+			fmt.Printf("+")
+		}
+	}
+
 	fmt.Println()
 }
 
@@ -70,20 +99,23 @@ func userPlay(brd [][]string, usym string) {
 
 func compPlay(brd [][]string, csym string) {
 	// Find the first empty cell and put a tic there
-	i := 0
-	j := 0
 	rows := len(brd)    // Number of rows
 	cols := len(brd[0]) // Number of columns
 
-	for i < rows {
-		for j < cols {
-			if brd[i][j] == " " { // empty cell
-				brd[i][j] = csym
-				return
-			}
-			j++
+	// Create a random number generator
+	rand.Seed(time.Now().UnixNano())
+
+	for i := 0; i < rows*cols; i++ {
+		// Generate a random integer between 0 and rows/cols
+		rand_row := rand.Intn(rows)
+		rand_col := rand.Intn(cols)
+		fmt.Print(rand_row)
+		fmt.Print(rand_row)
+
+		if brd[rand_row][rand_col] == " " { // empty cell
+			brd[rand_row][rand_col] = csym
+			return
 		}
-		i++
 	}
 }
 
@@ -166,33 +198,37 @@ func isGameWon(brd [][]string, turn int, usym string, csym string) bool {
 	return win
 }
 
+func createBoard(size int) [][]string {
+	// Create a board to play tiktaktoe
+	board := make([][]string, size)
+	for i := 0; i < size; i++ {
+		board[i] = make([]string, size)
+	}
+
+	return board
+}
+
 func main() {
-	const SIZE = 3
+	// First, welcome message and display the board.
+	fmt.Printf("===== WELCOME TO THE TIC-TAC-TOE GAME!! =====\n\n")
+	fmt.Printf("Which size of board do you like to play? ")
+	var size int
+	fmt.Scanln(&size)
 
 	// Create a board
-	board := make([][]string, SIZE)
-	// for i := 0; i < SIZE; i++ {
-	// 	board[i] = make([]string, SIZE)
-	// }
+	board := createBoard(size)
 
-	resetBoard(board) // initialize the board (with ' ' for all cells)
+	// Initialize the board with " " in all cells
+	resetBoard(board)
 
-	// // Print the 2D array
-	// for i := 0; i < len(board); i++ {
-	// 	for j := 0; j < len(board[i]); j++ {
-	// 		fmt.Print(board[i][j], " ")
-	// 	}
-	// 	fmt.Println()
-	// }
-
-	// First, welcome message and display the board.
-	fmt.Printf("===== WELCOME TO THE TIC-TAC-TOE GAME!! =====\n")
+	// Show the inital board
 	showBoard(board)
 
 	// Then ask the user which symbol (x or o) he/she wants to play.
 	fmt.Printf("Which symbol do you want to play, \"x\" or \"o\"? ")
 	var userSymbol, compSymbol string
 	fmt.Scanln(&userSymbol)
+	userSymbol = strings.ToLower(userSymbol)
 	if userSymbol == "x" {
 		compSymbol = "o"
 	} else {
@@ -201,13 +237,13 @@ func main() {
 
 	// Also ask whether or not the user wants to go first
 	fmt.Println()
-	fmt.Println("Do you want to go first (y/n)? ")
+	fmt.Print("Do you want to go first (y/n)? ")
 	var ans string
 	fmt.Scanln(&ans)
 	ans = strings.ToLower(ans)[:1]
 
 	turn := 0                  // 0 -- the user, 1 -- the computer
-	remainCount := SIZE * SIZE // empty the cell call
+	remainCount := size * size // empty the cell call
 
 	// THE VERY FIRST MOVE
 	if ans == "y" {
